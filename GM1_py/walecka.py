@@ -117,6 +117,42 @@ class BaryonOctetModel:
             k_max = 1000
             self.FVEC = np.zeros(self.N)
             self.FVEC = ...
+        
+    def funcv(self):
+        pass
+
+    def mapping(self):
+        pass
+
+    def SKFB2(self):
+        pass
+
+    def GaussLegendre(self):
+        pass
+
+    def F1(self):
+        pass
+
+    def F3(self):
+        pass
+
+    def F4(self):
+        pass
+    
+    def GaussJordan(self):
+        pass
+
+    def Broyden(self):
+        pass
+
+    def B(x):
+        pass
+
+    def mapping(self):
+        pass
+
+    def eos(self):
+        pass
 
 
 
