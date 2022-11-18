@@ -1,0 +1,16 @@
+939.0		!NUCLEON MASS				RM variavel
+512.0		!SCALAR MESON MASS			RMS
+783.0		!VECTOR MESON MASS			RMV
+770.0		!VECTOR-ISOVECTOR MESON MASS		RMR
+11.785 	!gsN^2/ms^2				XLS 
+7.1480  	!gwN^2/mw^2				XLW
+4.9390  	!grN^2/mr^2				XLR
+0.0058940	!K/M					RK
+-0.006420   	!LAMBDA				RLAM
+0.0      	!CSI					CSI
+0.7         	!gs/gN					XS sigma-hiperon coupling constant
+0.783       	!gw/gN 				XW omega-hiperon coupling constant
+0.783       	!gr/gN 				XR rho-hiperon coupling constant	 
+0.030		!nbinf [fm^-3]				RNBINF
+1.230		!nbsup [fm^-3]				RNBSUP			
+400		!number of points			NPOINT

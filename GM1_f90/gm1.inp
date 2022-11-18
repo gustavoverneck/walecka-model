@@ -1,0 +1,16 @@
+939.D0		!NUCLEON MASS				RM proton e neutron
+512.D0		!SCALAR MESON MASS			RMS
+783.D0		!VECTOR MESON MASS			RMV
+770.D0		!VECTOR-ISOVECTOR MESON MASS		RMR rho
+11.785D0 	!gsN^2/ms^2				XLS 
+7.1480D0  	!gwN^2/mw^2				XLW
+4.939d0  	!grN^2/mr^2				XLR
+0.005894D0	!K/M					RK	termo cubico n linear
+-0.00642D0   	!LAMBDA				RLAM	termo quartico n linear
+0.0      	!CSI					CSI
+0.7         	!gs/gN					XS sigma-hiperon coupling constant
+0.783       	!gw/gN 				XW omega-hiperon coupling constant
+0.783       	!gr/gN 				XR rho-hiperon coupling constant	 
+0.03d0		!nbinf [fm^-3]				RNBINF	range limite inferior
+1.23d0		!nbsup [fm^-3]				RNBSUP	range limite superior
+400		!number of points			NPOINT
