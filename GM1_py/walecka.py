@@ -16,12 +16,15 @@
 # Libraries
 import numpy as np
 import scipy.linalg as sla
+import tqdm
+import time
 
 class BaryonOctetModel:
     def __init__(self):
         print("<----- Walecka Model for Stellar Matter ----->")
         self.modelChoice()
         self.getInput()
+        self.main()
 
     def modelChoice(self):
         # -------- Option of Model --------- #
@@ -106,12 +109,21 @@ class BaryonOctetModel:
         X[3] = np.sqrt(0.22731e-5)
         X[4] = -0.57641e-6
 
-    
+    def main(self):
+        for i in tqdm.tqdm(range()):
+            self.RNBT = self.RNBINF + (i+1)*self.DNB
+
+            eps = 10e-8
+            k_max = 1000
+            self.FVEC = np.zeros(self.N)
+            self.FVEC = ...
 
 
 
+# <------------------------------------------>
 
 # Just run the code in a exquisite manner
 if __name__ == "__main__":
+    start = time.time()
     BaryonOctetModel()
-
+    print("Total execution time: ", start-time.time()," seconds")
