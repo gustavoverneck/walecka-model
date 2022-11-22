@@ -1,18 +1,3 @@
-# Reescrita do código de F90 para Python
-
-# --- Lista de Funções a serem implementadas ---
-#   FUNCV(n, x, FVEC)
-#   skfb2(I, kfe, kfn, vsigma, vomega, vrho)
-#   EOS(kfe, kfn, vsigma, vomega, vrho, ENER, PRESS, RPHI, RV0)
-#   F1, F3, F4
-#   GAUSS-LEGENDRE
-#   GAUSS-JORDAN
-#   BROYDEN
-#   B
-#   MAPPING
-#   
-
-
 # Libraries
 import numpy as np
 import scipy.linalg as sla
@@ -31,16 +16,16 @@ class BaryonOctetModel:
         chose = False
         print("\nChoose your model:")
         while not chose:
-            nh = int(input("Insert:\n\t2 - for Nucleons\n\t8 - for Nucleons + Hyperons\n\nYour choice: "))
+            self.nh = int(input("Insert:\n\t2 - for Nucleons\n\t8 - for Nucleons + Hyperons\n\nYour choice: "))
+            nh = self.nh
             if nh == 2 or nh == 8:
                 chose = True
             else:
                 print("Invalid choice. Please try again.")
         if nh == 2:
-            print("You chose: Nucleon")
+            print("You chose: Nucleon\n")
         elif nh == 8:
-            print("You choice: Nucleon + Hyperons")
-        self.nh = nh
+            print("You choice: Nucleon + Hyperons\n")
 
     def getInput(self):
         # -------- GET INPUT DATA FROM FILE-------- #
@@ -52,15 +37,17 @@ class BaryonOctetModel:
             self.mr = float(lines[3].split("\t")[0]) / self.rm # mr
             self.xls = float(lines[4].split("\t")[0])
             self.xlw = float(lines[5].split("\t")[0])
-            self.k = float(lines[6].split("\t")[0])
-            self.lam = float(lines[7].split("\t")[0])
-            self.csi = float(lines[8].split("\t")[0])
-            self.xs = float(lines[9].split("\t")[0])
-            self.xw = float(lines[10].split("\t")[0])
-            self.xr = float(lines[11].split("\t")[0])
-            self.nbnif = float(lines[12].split("\t")[0]) / (self.rm/197.32)**3
-            self.nbsup = float(lines[13].split("\t")[0]) / (self.rm/197.32)**3
-            self.n_points = float(lines[14].split("\t")[0])
+            self.xlr = float(lines[6].split("\t")[0])
+            self.k = float(lines[7].split("\t")[0])
+            self.lam = float(lines[8].split("\t")[0])
+            self.csi = float(lines[9].split("\t")[0])
+            self.xs = float(lines[10].split("\t")[0])
+            self.xw = float(lines[11].split("\t")[0])
+            self.xr = float(lines[12].split("\t")[0])
+            self.nbnif = float(lines[13].split("\t")[0]) / (self.rm/197.32)**3
+            self.nbsup = float(lines[14].split("\t")[0]) / (self.rm/197.32)**3
+            self.n_points = int(lines[15].split("\t")[0])
+
             self.dnb = (self.nbsup-self.nbnif)/(self.n_points-1)
 
         # -------- MANUAL INPUT DATA -------- #
@@ -71,7 +58,7 @@ class BaryonOctetModel:
             self.sb = np.array([0.00,0.00,-1.0,-1.0,-1.0,-1.0,-2.0,-2.0])
             self.gs = np.zeros(self.nh)
             self.gv = np.zeros(self.nh)
-            self.gv = np.zeros(self.nh)
+            self.gr = np.zeros(self.nh)
 
         for i in range(2,8):
             self.mb[i] /= self.rm # Adimensionalidade barions/hiperions
@@ -99,7 +86,7 @@ class BaryonOctetModel:
 
         # Initializing Variables
         self.n = 5
-        self.x = np.zeros(n)
+        self.x = np.zeros(self.n)
 
         self.ne0 = 0.10 * self.nbnif
         self.nn0 = 0.90 * self.nbnif
@@ -114,17 +101,26 @@ class BaryonOctetModel:
         self.k_max = 1000
 
     def main(self):
-        for i in tqdm.tqdm(range()):
+        file = open("eos.dat", "w+")
+        for i in tqdm.tqdm(range(0, self.n_points)):
             self.nbt = self.nbnif + (i+1)*self.dnb
             x = self.Broyden(self.x, self.fvec())
             kfe, kfn, vsigma, vomega, vrho = self.mapping()
-           #ADICIONAR ### kfe,kfn,vsigma,vomega,vrho,ener,press,presslep,enerlep = eos(kfe,kfn,vsigma,vomega,vrho,ener,press,v0,phi)
+            
+            ener, press, presslep, enerlep = self.eos(kfe, kfn, vsigma, vomega, vrho)
 
             self.nbtd = self.nbt*(self.rm/197.320)**3
-            self.mns = (self.mb[0] - vsigma)
-	        mum = vomega + i3[0]*vrho + np.sqrt((3.0*np.pi**2*self.nb[0])**0.66666666670 + self.mns**2)   	#neutron chemical potential
-	        mue = np.sqrt((3.0*np.pi**2*self.nl[0])**0.66666666670 + self.ml[0]**2)
-            dener = ener # falta o eos...
+            self.mns = self.mb[0] - vsigma
+            mum = vomega + self.i3[0]*vrho + np.sqrt((3.0*np.pi**2*self.nb[0])**0.66666666670 + self.mns**2)   	#neutron chemical potential
+            mue = np.sqrt((3.0*np.pi**2*self.nl[0])**0.66666666670 + self.ml[0]**2)
+            dener = ener/self.nbt - 1.0     # Densidade de energia
+            dener *= self.rm                # Mult. por rm para ficar em MeV
+            file.write("%.10f %.10f %.10f %.10f\n" %(self.nbtd,ener,press,mum*self.rm))
+            rmpu = self.mb[0]*self.nb[0] + self.mb[1]*self.nb[1] + self.mb[2]*self.nb[2] + self.mb[3]*self.nb[3]+ self.mb[4]*self.nb[4] + self.mb[5]*self.nb[5] + self.mb[6]*self.nb[6] + self.mb[7]*self.nb[7]
+            rmpum = ((rmpu/(self.nbtd)))*(939.0/197.330)**3
+            rmpummev = rmpum*939.0
+            rmpumfm =  rmpummev/197.330
+            #DUVIDA - O CÓDIGO GERA OUTPUT E CALCULA ESSAS ÚLTIMAS COISAS
         
     def fvec(self):     # returns fv - Duvida, reseta as variaveis
         fv = np.zeros(self.n)
@@ -143,8 +139,9 @@ class BaryonOctetModel:
         fsigmanl = -self.k/(2.0*self.ms**2)*vsigma**2/self.gs[0] - self.lam/(6.0*self.ms**2)*vsigma**3/self.gs[0]**2
         fomeganl = -self.csi*self.gv[0]**4/(6.0*self.mv**2)*vomega**3/self.gv[0]**2
         
-        for i in range(1, nh):
-            kfb2 = self.skfb2(i, kfe, kfn, vsigma, vomega, vrho)
+        for i in range(1, self.nh):
+            self.kfb2 = self.skfb2(i, kfe, kfn, vsigma, vomega, vrho)
+            kfb2 = self.kfb2
             if kfb2 > 0.0:
                 kfb = np.sqrt(kfb2)
             else:
@@ -161,7 +158,7 @@ class BaryonOctetModel:
             #rmu = mum - qb[i]*mue
             #rnu = rmu - self.gv[i]/self.gv[0]*vomega - self.gr[i]/self.gr[0]*i3[i]*vrho
 
-            re1 = self.GaussLegendre(f1(kfb, rma), 0.0, kfb, 10)
+            re1 = self.GaussLegendre(self.f1(kfb, rma), 0.0, kfb, 10)
             fsigma += self.gs[i]*self.gs[0]/self.ms**2*re1
             densb = kfb**3/3.0/np.pi**2
             fomega += self.gv[i]*self.gv[0]/self.mv**2*densb
@@ -176,7 +173,7 @@ class BaryonOctetModel:
         if kfmu2 > 0.0:
             kfmu = np.sqrt(kfmu2)
         else:
-            fkfmu = 0.0
+            kfmu = 0.0
         
         densmu = kfmu**3/3.0/np.pi**2
         charge == densmu
@@ -238,33 +235,33 @@ class BaryonOctetModel:
             b[k] = (b[k] - np.dot(a[k][k:n], b[k:n]))/a[k][k]
         return b
 
-    def f1(self, k1, rma):
+    def f1(self, kr, rma):
         f1 = kr*kr*rma/(np.pi**2*np.sqrt(kr*kr + rma*rma))
         return f1
 
-    def f3(kr, rma):
+    def f3(self, kr, rma):
         f3 = kr*kr*np.sqrt(kr*kr + rma*rma)*np.pi**2
         return f3
 
-    def f4(kr, rma):
+    def f4(self, kr, rma):
         f4 = kr**4 / (np.sqrt(kr*kr + rma*rma)*(3.0*np.pi**2))
         return f4
 
     def Broyden(self, xk, f):
         k = 0
         n = len(xk)
-        fk = f(xk, n)
-        B = self.B
+        fk = f
+        B = self.B()
         f_norma = np.linalg.norm(fk, ord=2)
 
         while abs(f_norma) > self.eps and k < self.k_max:
             s = self.GaussJordan(B, -1*fk)
             xk += s
-            f_novo = f(xk, n)
+            f_novo = f
             df = f_novo - fk
-            B = B + (np.outer((df - np.dot(B, s)), s)) / (np.dot(s, s))
+            B = B + (np.outer((df - np.dot(B, s)), s)) / (np.dot(s, s)) # ERRO NA DIVISÃO - GERANDO INFINITOS
 
-            f_norma = np.linalg(fk, ord=2)
+            f_norma = np.linalg.norm(fk, ord=2)
             fk = f_novo
             k += 1
         
@@ -273,8 +270,67 @@ class BaryonOctetModel:
     def B(self):
         return np.array([[1.0,0.0,0.0, 0.0,0.0],[0.0,1.0,0.0, 0.0,0.0],[0.0,0.0,1.0,0.0,0.0],[0.0,0.0,0.0,1.0,0.0],[0.0,0.0,0.0,0.0,1.0]])
 
-    def eos(self):
-        pass
+    def eos(self, kfe, kfn, vsigma, vomega, vrho):  # returns ener, press, presslep, enerlep
+        phi = vsigma / self.gs[0]
+        v0 = vomega / self.gv[0]
+        b0 = -vrho / self.gr[0]
+
+        # Densidade de Energia no Momento de Fermi - 5.36
+        enerf = self.mv**2*v0**2/2.0 + self.csi*self.gv[0]**4*v0**4/24.0 + self.mr**2*b0**2/2.0 - self.ms**2*phi**2/2.0 - self.k*phi**3/6.0 - self.lam*phi**4/24.0
+        pressf = self.mv**2*v0**2/2.0 + self.csi*self.gv[0]**4*v0**4/24.0 + self.mr**2*b0**2/2.0 - self.ms**2*phi**2/2.0 - self.k*phi**3/6.0 - self.lam*phi**4/24.0
+        enerbar = 0.01      # energia barionica inicial
+        pressbar = 0.01     # pressão barionica inicial
+
+        for i in range(0, self.nh):
+            self.kfb2 = self.skfb2(i, kfe, kfn, vsigma, vomega, vrho)
+            if self.kfb2 > 0.0:
+                kfb = np.sqrt(kfb2)
+            else:
+                kfb = 0.0
+
+            mbs = self.mb[i] - vsigma*self.gs[i]/self.gs[0]
+            rma = mbs
+            mns = self.mb[0] - vsigma
+            efn = np.sqrt(kfn**2 + mns**2)
+            mue = np.sqrt(kfe**2 + self.ml[0]**2)
+            mum = vomega + self.i3[0]*vrho + efn
+            rmu = mum + self.qb[i]*mue
+            rnu = rmu - self.gv[i]/self.gv[0]*vomega - self.gr[i]/self.gr[0]*self.i3[i]*vrho
+
+            re3 = self.GaussLegendre(self.f3(kfb, rma), 0.0, kfb, 10)
+            enerbar += re3
+
+            re4 = self.GaussLegendre(self.f4(kfb, rma), 0.0, kfb, 10)
+            pressbar += re4
+        
+        enerlep = 0.001
+        presslep = 0.001
+        kfmu = 0.001
+        kfmu2 = kfe**2 + self.ml[0]**2 - self.ml[1]**2
+
+        if kfmu2 > 0.0:
+            kfmu = np.sqrt(kfmu2)
+            mue = np.sqrt(kfe**2 + self.ml[0]**2)
+            rnu = mue
+            rma = self.ml[0]
+
+        re3le = self.GaussLegendre(self.f3(kfb, rma), 0.0, kfe, 10)
+        enerlep += re3le
+
+        re4le = self.GaussLegendre(self.f4(kfb, rma), 0.0, kfe, 10)
+        presslep += re4le
+        rma = self.ml[1]
+
+        re3lmu = self.GaussLegendre(self.f3(kfb, rma), 0.0, kfmu, 10)
+        enerlep += re3lmu
+
+        re4lmu = self.GaussLegendre(self.f4(kfb, rma), 0.0, kfmu, 10)
+
+        presslep += re4lmu
+        ener = enerf + enerbar + enerlep        # Soma de todos os termos de energia
+        press = pressf + pressbar + presslep    # Soma de todos os termos de pressão
+
+        return ener, press, presslep, enerlep
 
 
 # <------------------------------------------>
@@ -283,4 +339,4 @@ class BaryonOctetModel:
 if __name__ == "__main__":
     start = time.time()
     BaryonOctetModel()
-    print("Total execution time: ", start-time.time()," seconds")
+    print("Total execution time: ", round(time.time()-start, 3)," seconds")
